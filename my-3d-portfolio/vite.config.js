@@ -1,20 +1,15 @@
-import { fileURLToPath, URL } from 'node:url'
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import { fileURLToPath, URL } from 'node:url';
 
 export default defineConfig({
-  plugins: [
-    vue({
-      template: {
-        transformAssetUrls: {
-          includeAbsolute: false,
-        },
-      },
-    }),
-  ],
+  plugins: [vue()], // Remove custom elements config
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
+  },
+  optimizeDeps: {
+    include: ['three', 'troisjs', 'postprocessing']
   }
-})
+});

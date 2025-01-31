@@ -23,31 +23,31 @@ let controls;
 
 onMounted(() => {
   if (renderer.value?.three) {
-    // Make renderer transparent
-    renderer.value.three.renderer.setClearColor(0x000000, 0);
+    // Configure renderer with white background
+    renderer.value.three.renderer.setClearColor(0xffffff, 1);
+    renderer.value.three.renderer.shadowMap.enabled = true;
 
     controls = new OrbitControls(
       renderer.value.three.camera,
       renderer.value.three.renderer.domElement
     );
 
-    // Configure controls
+    // Configure controls for better UX
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.enableZoom = true;
-    controls.minDistance = 8;
-    controls.maxDistance = 20;
+    // In onMounted()
+    controls.minDistance = 8;  // Was 5
+    controls.maxDistance = 25; // Was 15
     controls.enablePan = false;
-    controls.minPolarAngle = Math.PI / 4;
-    controls.maxPolarAngle = Math.PI / 2;
-    controls.target.set(0, 0, 0);
+    controls.minPolarAngle = Math.PI / 3;
+    controls.maxPolarAngle = Math.PI / 2.5;
+    controls.target.set(0, 0.5, 0);
 
     // Animation loop
     const animate = () => {
       requestAnimationFrame(animate);
-      if (controls) {
-        controls.update();
-      }
+      controls.update();
     };
     animate();
   }
@@ -62,44 +62,38 @@ onUnmounted(() => {
 
 <template>
   <div class="scene-container">
-    <!-- Background container -->
-    <div class="background-container">
-      <div class="background-overlay"></div>
-    </div>
-
     <!-- 3D Scene -->
-    <Renderer ref="renderer" antialias resize="window" alpha>
-      <Camera :position="{ x: 0, y: 2, z: 12 }" />
+    <Renderer ref="renderer" antialias resize="window">
+      <Camera :position="{ x: 10, y: 9, z: 15 }" />
       <Scene>
-        <!-- 3D Models -->
-        <Computer @click="showResume = true" :position="{ x: 0, y: -1, z: 0 }" :scale="{ x: 0.8, y: 0.8, z: 0.8 }" />
-        <Bookshelf @click="showAbout = true" :position="{ x: 4, y: -1, z: 2 }" :scale="{ x: 0.7, y: 0.7, z: 0.7 }"
-          :rotation="{ y: -Math.PI / 6 }" />
-        <Phone @click="showContact = true" :position="{ x: -4, y: -0.5, z: 2 }" :scale="{ x: 0.4, y: 0.4, z: 0.4 }"
-          :rotation="{ y: Math.PI / 6 }" />
+        <!-- Adjusted 3D Models with proper scale and position -->
+        <Computer @click="showResume = true" :position="{ x: 0, y: 0, z: 0 }" :scale="{ x: 0.8, y: 0.5, z: 0.5 }" />
+        <Bookshelf @click="showAbout = true" :position="{ x: -1, y: 5, z: -3 }" :scale="{ x: 5, y: 5, z: 6 }"
+          :rotation="{ y: -Math.PI / -1.2 }" />
+        <Phone @click="showContact = true" :position="{ x: -7, y: 2, z: -30 }" :scale="{ x: 1.5, y: 1.5, z: 1.5 }"
+          :rotation="{ y: 0.13, z: 0 }" />
 
-        <!-- Lighting -->
-        <AmbientLight :intensity="0.7" />
-        <PointLight :position="{ x: 10, y: 10, z: 10 }" :intensity="1" />
-        <PointLight :position="{ x: -10, y: 10, z: -10 }" :intensity="0.8" />
-        <PointLight :position="{ y: 5, z: 5 }" :intensity="1.2" />
+        <!-- Enhanced Lighting -->
+        <AmbientLight :intensity="0.8" />
+        <PointLight :position="{ x: 5, y: 8, z: 5 }" :intensity="1.2" cast-shadow />
+        <PointLight :position="{ x: -5, y: 8, z: -5 }" :intensity="0.8" cast-shadow />
       </Scene>
     </Renderer>
 
-    <!-- Modal Components with Transitions -->
+    <!-- Modal Components -->
     <Transition name="fade">
-      <ResumeModal v-if="showResume" @close="showResume = false" class="modal" />
+      <ResumeModal v-if="showResume" @close="showResume = false" />
     </Transition>
 
     <Transition name="fade">
-      <AboutBook v-if="showAbout" @close="showAbout = false" class="modal" />
+      <AboutBook v-if="showAbout" @close="showAbout = false" />
     </Transition>
 
     <Transition name="fade">
-      <ContactPhone v-if="showContact" @close="showContact = false" class="modal" />
+      <ContactPhone v-if="showContact" @close="showContact = false" />
     </Transition>
 
-    <!-- Optional: Add instructions or hover text -->
+    <!-- Instructions -->
     <div class="instructions" v-if="!showResume && !showAbout && !showContact">
       <p>Click on objects to interact</p>
     </div>
@@ -111,41 +105,17 @@ onUnmounted(() => {
   width: 100%;
   height: 100vh;
   position: relative;
-  overflow: hidden;
+  background: white;
 }
 
-.background-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -2;
-}
-
-.background-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.3);
-  z-index: -1;
-}
-
-/* Make renderer transparent */
+/* Make renderer fullscreen */
 :deep(canvas) {
-  position: relative;
-  z-index: 1;
-}
-
-/* Modal styles */
-.modal {
   position: fixed;
-  z-index: 100;
+  top: 0;
+  left: 0;
 }
 
-/* Transition animations */
+/* Modal transitions */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s ease;
@@ -162,21 +132,16 @@ onUnmounted(() => {
   bottom: 2rem;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.7);
-  color: white;
+  color: rgba(0, 0, 0, 0.8);
   padding: 0.5rem 1rem;
   border-radius: 4px;
   font-size: 0.9rem;
   pointer-events: none;
-  opacity: 0.8;
-  transition: opacity 0.3s ease;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(2px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.instructions:hover {
-  opacity: 1;
-}
-
-/* Optional: Add responsive design */
 @media (max-width: 768px) {
   .instructions {
     font-size: 0.8rem;
@@ -184,8 +149,13 @@ onUnmounted(() => {
   }
 }
 
-/* Optional: Add hover effects for interactive elements */
-:deep(.interactive-object:hover) {
+/* Interactive cursor */
+:deep(.interactive) {
   cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+:deep(.interactive:hover) {
+  transform: scale(1.02);
 }
 </style>
